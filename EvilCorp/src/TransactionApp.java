@@ -163,11 +163,10 @@ public class TransactionApp {
 			transType = sc.next();
 
 		}
+		// sort all the transaction objects based on the date
 		Collections.sort(transArrayList);	
-		for (Transaction trans : transArrayList) {
-					
+		for (Transaction trans : transArrayList)					
 			trans.getMyAccount().updateAccountBalance(trans.getAmt());
-		}
 
 		System.out
 				.println("\n---------------------------RESULTS-------------------------------");
