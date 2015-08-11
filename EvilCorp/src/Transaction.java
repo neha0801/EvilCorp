@@ -2,11 +2,11 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class Transaction {
+public class Transaction implements Comparable<Transaction> { 
 	
 	private Account myAccount;
-	private HashMap<Long,Double> transData = new HashMap<Long,Double>();
-	private List<Double> sortedAmt = new ArrayList<Double>();
+	private Date transDate;
+	private double amt;
 	private NumberFormat currency;
 	
 	public Transaction(Account account){
@@ -14,10 +14,6 @@ public class Transaction {
 		this.currency = NumberFormat.getCurrencyInstance(); 
 	}
 	
-	public void setTransData(long date, double amt){
-		this.transData.put(date, amt);
-	}
-
 	public Account getMyAccount() {
 		return myAccount;
 	}
@@ -26,24 +22,20 @@ public class Transaction {
 		this.myAccount = myAccount;
 	}
 
-	public HashMap<Long, Double> getTransData() {
-		return transData;
-	}
-	
-
-	public List<Double> getSortedAmt() {
-		return sortedAmt;
+	public double getAmt() {
+		return amt;
 	}
 
-	public void setSortedAmt(List<Double> sortedAmt) {
-		this.sortedAmt = sortedAmt;
+	public void setAmt(double amt) {
+		this.amt = amt;
 	}
-	
-	public void sortedDateAmt(){
-		SortedSet<Long> keys = new TreeSet<Long>(transData.keySet());
-		for(long k : keys){
-			sortedAmt.add(transData.get(k));
-		}
+
+	public Date getTransDate() {
+		return transDate;
+	}
+
+	public void setTransDate(Date transDate) {
+		this.transDate = transDate;
 	}
 
 	public String toString(){
@@ -51,15 +43,20 @@ public class Transaction {
 		String amtOutput="";
 		GregorianCalendar cal = new GregorianCalendar();
 		SimpleDateFormat formatter = new SimpleDateFormat("mm/dd/yyyy");
-		for (Long k : transData.keySet()) {
-			cal.setTimeInMillis(k);
-			dateOutput += "The Date of transaction: " +  formatter.format((cal.getTime()));
-			amtOutput += "The transaction amount: " + currency.format(transData.get(k));
-		}
+		cal.setTimeInMillis(this.transDate.getTime());
+		dateOutput += "The Date of transaction: " +  formatter.format((cal.getTime()));
+		amtOutput += "The transaction amount: " + currency.format(this.amt);
 		return "--------------------ACCOUNT DETAILS---------------------" + "\n"  
 				+ myAccount.toString() + "\n" 
 				+ dateOutput + "\n" + amtOutput + "\n";
 	}
-	
+
+	/**
+	 * to compare objects 
+	 */
+	@Override
+	public int compareTo(Transaction t1) {
+		return this.getTransDate().compareTo(t1.transDate);
+	}
 
 }

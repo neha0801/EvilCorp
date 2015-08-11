@@ -1,10 +1,8 @@
-import java.text.NumberFormat;
-import java.util.List;
-
 /**
  * @author Neha
  *
  */
+import java.text.NumberFormat;
 public class Account {
 
 	private long accountNumber;
@@ -47,12 +45,11 @@ public class Account {
 	 * 
 	 * @param amt
 	 */
-	public void updateAccountBalance(List<Double> amt){
-		for (double a : amt)
-			this.accountBalance += a;
+	public void updateAccountBalance(double amt){
 		if (this.accountBalance <0.0){
 			this.accountBalance -=35.0;
-		}
+		}else
+			this.accountBalance+=amt;
 
 	}
 	
