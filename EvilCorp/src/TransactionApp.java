@@ -5,6 +5,8 @@
 
 import java.io.*;
 import java.text.NumberFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class TransactionApp {
@@ -29,49 +31,60 @@ public class TransactionApp {
 		
 		List<Transaction> transArrayList = new ArrayList<Transaction>();
 		
-		String filepath = "C:/Users/rvhu321018ur/Desktop/GIT Files/EvilCorp/EvilCorp/myAccounts.txt";
-		readFile(filepath);
+		File myFile = new File("myAccounts");
+		try {
+			myFile.createNewFile();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		readFile(myFile);
 		
 		System.out.println("Welcome to Evil Corp Savings and Loan");
 		System.out.println("Please select the required operation");
-		System.out.print("Add an account(A):\nRemove an account(D):"
-				+ "\nTo exit and enter Transaction Application(-1):\n");
+		System.out.println("Add an account(A):\nRemove an account(D):"
+				+ "\nTo finish and enter Transaction Application(-1):");
 		choice = sc.next();
 		while(true){
 			if(choice.equalsIgnoreCase("A"))
 			{
-				System.out.print("Enter an account #: ");
-				accNo=sc.nextLong();	
+				accNo=Validator.validateAccNo(sc,"Enter an account #: ");	
 				exists = checkFile(accNo);
 				if(!exists){
 					myAccount = new Account();
 					myAccount.setAccountNumber(accNo);
-					sc.nextLine();
 					System.out.print("Enter the name for acct # " + myAccount.getAccountNumber() + ": ");
 					custName = sc.nextLine();
+					if(!Validator.validateCustName(custName)){
+						System.out.println("Name validation failed");
+						continue;
+					}
 					myAccount.setCustomerName(custName);
-					System.out.print("Enter the balance for acct # " + myAccount.getAccountNumber() + ": ");
-					accBal = sc.nextDouble();
+					accBal = Validator.validateAmount(sc, ("Enter the balance for acct # " 
+							+ myAccount.getAccountNumber() + ": "));
+					
 					myAccount.setAccountBalance(accBal);
+					
 					fileAccount.add(myAccount);
-					writeToFile();
+					
+					writeToFile(myFile);
+					
 					System.out.println("Account added");
 					System.out.println("Please select the required operation");
 					System.out.println("Add an account(A):\nRemove an account(D):"
-							+ "\nTo exit and enter Transaction Application(-1):\n");
+							+ "\nTo finish and enter Transaction Application(-1):");
 					choice = sc.next();
 				}else{
 					exists = false;
 					System.out.println("Please select the required operation");
 					System.out.println("Add an account(A):\nRemove an account(D):"
-							+ "\nTo exit and enter Transaction Application(-1):\n");
+							+ "\nTo finish and enter Transaction Application(-1):");
 					choice = sc.next();
 				}
 			} else if (choice.equalsIgnoreCase("D")){
 				removeAccount();
 				System.out.println("Please select the required operation");
 				System.out.println("Add an account(A):\nRemove an account(D):"
-						+ "\nTo exit and enter Transaction Application(-1):\n");
+						+ "\nTo finish and enter Transaction Application(-1):");
 				choice = sc.next();							
 			}else if(choice.equalsIgnoreCase("-1")){
 				break;
@@ -79,7 +92,7 @@ public class TransactionApp {
 				System.out.println("Incorrect Input");
 				System.out.println("Please select the required operation");
 				System.out.println("Add an account(A):\nRemove an account(D):"
-						+ "\nTo exit and enter Transaction Application(-1):\n");
+						+ "\nTo finish and enter Transaction Application(-1):");
 				choice = sc.next();
 			}
 				
@@ -92,21 +105,25 @@ public class TransactionApp {
 		
 		while (!transType.equalsIgnoreCase("-1"))
 		{
-			System.out.print("Enter the account #: ");
-			accNo = sc.nextLong();
-
-			System.out.print("Enter the amount for your transaction: ");
-			amtEntered = sc.nextDouble();
+			accNo = Validator.validateAccNo(sc,"Enter an account #: ");	
+			
+			amtEntered = Validator.validateAmount(sc, ("Enter the amount for your transaction: "));
 			
 			System.out.println("Enter the transaction date:");
 			System.out.print("(Date format should be mm/dd/yyyy): ");
 			dateofTrans = sc.next();
-
+			
+			transDate = changeStringToDate(dateofTrans);
+			
+			if(transDate==null){
+				System.out.println("Enter transaction details again.");
+				continue;
+			}
 			if (transType.equalsIgnoreCase("W") || transType.equalsIgnoreCase("DC")){
 				amtEntered = - amtEntered;
-				System.out.println("Transaction Type: Debit");
+				System.out.println("Transaction Type: Withdrawal");
 			} else if (transType.equalsIgnoreCase("C") || transType.equalsIgnoreCase("D"))
-				System.out.println("Transaction Type: Credit");
+				System.out.println("Transaction Type: Deposit");
 			else {
 				System.out.println("Incorrect value entered");
 				continue;
@@ -115,7 +132,6 @@ public class TransactionApp {
 			for (Account acc : fileAccount){
 				if (acc.getAccountNumber() == accNo){
 					myTrans = new Transaction(acc);
-					transDate = myTrans.changeStringToDate(dateofTrans);
 					myTrans.setTransData(transDate.getTime(), amtEntered);
 					transArrayList.add(myTrans);
 				}
@@ -138,7 +154,7 @@ public class TransactionApp {
 						+ acc.getAccountNumber() + " :" +currency.format(acc.getAccountBalance()));
 		}
 		//add the final values to file
-		writeToFile();
+		writeToFile(myFile);
 		
 		System.out.println("-------------------------------------------------------------------");
 		for(Transaction trans : transArrayList){
@@ -147,14 +163,36 @@ public class TransactionApp {
 		sc.close();
 		System.out.println("Good Bye!!");
 	}
-	
 	/**
-	 * 
-	 * @param filepath
+	 * to convert string to date object
+	 * @param date
+	 * @return date object
 	 */
-	public static void readFile(String filepath){
+	
+	public static Date changeStringToDate(String date)
+	{
+		SimpleDateFormat formattedDate = new SimpleDateFormat("mm/dd/yyyy");
+		Date date1 = null;
+		GregorianCalendar cal = new GregorianCalendar();
+		try
+		{
+			date1 = formattedDate.parse(date);
+			cal.setTime(date1);
+		} catch(ParseException e)
+		{
+			// if incorrect format is entered for date exit the application
+			System.out.println("Incorrect date Format");
+			
+		}
+		return date1;
+	}
+	
+	/**	 * 
+	 * @param myFile
+	 */
+	public static void readFile(File myFile){
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader(filepath));
+			BufferedReader reader = new BufferedReader(new FileReader(myFile));
 			String line;
 			while((line=reader.readLine())!=null){
 				myAccount = new Account();
@@ -170,11 +208,14 @@ public class TransactionApp {
 			e2.printStackTrace();
 		} 
 	}
-	public static void writeToFile(){
-		String fileName = (System.getProperty("user.dir") + File.separatorChar +"myAccounts.txt");
+	/**
+	 *  
+	 * @param myFile
+	 */
+	public static void writeToFile(File myFile){
 		FileWriter writer;
 		try{
-			writer = new FileWriter(fileName);
+			writer = new FileWriter(myFile);
 			BufferedWriter bufferWritter = new BufferedWriter(writer);
 			for(Account acc : fileAccount){
 				bufferWritter.write("Account#:" + acc.getAccountNumber() + "\n");
@@ -227,14 +268,13 @@ public class TransactionApp {
 					}else{					
 						System.out.println("Operation Canceled:");
 						break;
-					}
+					}// close user choice if
 					
 				}else{
 					System.out.println("Kindly clear the account balance");
 					break;
-				}					
-			}
-		}
+				}// close eligible for deleting account if					
+			}// closing if to check account object with account number
+		}// closing for loop
 	}
-
 }

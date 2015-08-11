@@ -1,5 +1,4 @@
 import java.text.NumberFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -62,22 +61,5 @@ public class Transaction {
 				+ dateOutput + "\n" + amtOutput + "\n";
 	}
 	
-	public Date changeStringToDate(String date)
-	{
-		SimpleDateFormat formattedDate = new SimpleDateFormat("mm/dd/yyyy");
-		Date date1 = null;
-		GregorianCalendar cal = new GregorianCalendar();
-		try
-		{
-			date1 = formattedDate.parse(date);
-			cal.setTime(date1);
-			
-			
-		} catch(ParseException e)
-		{
-			// if incorrect format is entered for date exit the application
-			System.out.println("Incorrect date Format. Run the application again. Good Bye!!");
-		}
-		return date1;
-	}
+
 }
